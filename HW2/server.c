@@ -115,7 +115,7 @@ int main(int argc, char const *argv[])
 			send(new_socket , hello , strlen(hello) , 0 );
 
 			//send message 
-   		 	printf("Hello message sent\n");
+			printf("Hello message sent\n");
 
 			close(server_fd);
 
