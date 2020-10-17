@@ -18,6 +18,9 @@ int main(int argc, char const *argv[])
     int addrlen = sizeof(address);
     char buffer[102] = {0}; // size holding 102 arbit
     char *hello = "Hello from server";
+	char socket_str[100];
+	char filepath[100];
+
 
 
 	pid_t childpid;
@@ -99,7 +102,18 @@ int main(int argc, char const *argv[])
 			printf("Forked\n");
 			printf("Child process  created addr: %p\n", ptr);
 			printf("childpid = %d\n", childpid);
-		
+
+			// sending the new_socket output to socket_string		
+			sprintf(socket_str, "%d", new_socket);
+
+			// copy the file path to our string filepath
+			strcpy(filepath, argv[0]);
+
+			// create a new set of arguments to parse in execv
+			char *new_argv[] = {filepath, socket_str, NULL};
+
+			execv(argv[0], new_argv);
+
 			printf("Initial uid = %d\n", getuid());
 			
 			//nobody user
@@ -123,9 +137,9 @@ int main(int argc, char const *argv[])
 	
 		else if ((childpid = fork()) > 0)
 		{
-		sleep(5);
-		printf("\n Parent process addr: %p", ptr);
-		printf("\n parentpid = %d\n", childpid);
+			sleep(5);
+			printf("\n Parent process addr: %p", ptr);
+			printf("\n parentpid = %d\n", childpid);
 		}
 
 		else 
