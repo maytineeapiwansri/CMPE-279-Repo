@@ -1,4 +1,3 @@
-// Server side C/C++ program to demonstrate Socket programming
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -18,6 +17,8 @@ int main(int argc, char const *argv[])
     int addrlen = sizeof(address);
     char buffer[102] = {0}; // size holding 102 arbit
     char *hello = "Hello from server";
+	
+
 	char socket_str[100];
 	char filepath[100];
 
@@ -88,10 +89,8 @@ int main(int argc, char const *argv[])
 			errx(1, "need root access");
 			
 		}
-
 		if((pw = getpwnam(NOBODY_USER)) == NULL)
 		{
-
 			errx(1, "nobody user %s", NOBODY_USER);
 		}*/
 //FORK HERE!
@@ -105,6 +104,10 @@ int main(int argc, char const *argv[])
 
 			// sending the new_socket output to socket_string		
 			sprintf(socket_str, "%d", new_socket);
+			
+			//initializing server_copy to use
+			char *fname = "./server2";
+			argv[0] = fname; 
 
 			// copy the file path to our string filepath
 			strcpy(filepath, argv[0]);
@@ -113,6 +116,9 @@ int main(int argc, char const *argv[])
 			char *new_argv[] = {filepath, socket_str, NULL};
 
 			execv(argv[0], new_argv);
+						
+				
+			
 
 			printf("Initial uid = %d\n", getuid());
 			
