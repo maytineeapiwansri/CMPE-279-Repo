@@ -17,26 +17,25 @@ int main(int argc, char const *argv[])
     int addrlen = sizeof(address);
     char buffer[1024] = {0}; // size holding 102 arbit
     char *hello = "Hello from server";
-	
 
-	char socket_str[100];
-	char filepath[100];
+    // used to pass our socket
+    char socket_str[100];
+    char filepath[100];
 
+    // used for fork
+    pid_t childpid;
+    char x='X';
+    char *ptr;
+    ptr=&x;
 
-
-	pid_t childpid;
-	char x='X';
-	char *ptr;
-	ptr=&x;
-
-	int tempuid = 0;
-	uid_t uid;
+    int tempuid = 0;
+    uid_t uid;
 
     printf("execve=0x%p\n", execve);
 
 
-		//create socket that is AF_INET network - socket, system hand back file descriptor = number, endpoint for socket to accept incoming connections
- 
+    //create socket that is AF_INET network - socket, system hand back file descriptor = number, endpoint for socket to accept incoming connections
+
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -51,17 +50,18 @@ int main(int argc, char const *argv[])
         perror("setsockopt");
         exit(EXIT_FAILURE);
     }
-	
-	//listen on network 
+
+    //listen on network 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
 
-	//listen on port 8080
+    //listen on port 8080
     address.sin_port = htons( PORT );
 
 
-		//associate socket to desired port
-    // Forcefully attaching socket to the port 8080
+    //associate socket to desired port
+    // 
+	Forcefully attaching socket to the port 8080
     if (bind(server_fd, (struct sockaddr *)&address,
                                  sizeof(address))<0)
     {
@@ -74,7 +74,7 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-		//accept from new file descripter (socket) -- read and write to it from file
+    //accept from new file descripter (socket) -- read and write to it from file
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                        (socklen_t*)&addrlen))<0)
     {
@@ -82,84 +82,55 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
+    //child process
+    if ((childpid = fork()) == 0)
+    {
 
+        printf("Forked\n");
+        printf("Child process  created addr1: %p\n", ptr);
+        printf("childpid = %d\n", childpid);
 
-		/*if(getuid())
-		{
-			errx(1, "need root access");
-			
-		}
-		if((pw = getpwnam(NOBODY_USER)) == NULL)
-		{
-			errx(1, "nobody user %s", NOBODY_USER);
-		}*/
-//FORK HERE!
-	
-		if ((childpid = fork()) == 0)
-		{
-			
-			printf("Forked\n");
-			printf("Child process  created addr1: %p\n", ptr);
-			printf("childpid = %d\n", childpid);
+        // sending the new_socket output to socket_string		
+        sprintf(socket_str, "%d", new_socket);
 
+        //initializing server_copy to use
+        char *fname = "./server2";
+        //char *argv[0];
+        argv[0] = fname; 
 
-			// sending the new_socket output to socket_string		
-			sprintf(socket_str, "%d", new_socket);
-			
+        // copy the file path to our string filepath
+        strcpy(filepath, argv[0]);
 
-			//initializing server_copy to use
-			char *fname = "./server2";
-			//char *argv[0];
-			argv[0] = fname; 
-		
+        //strcpy(filepath, fname);
 
-			// copy the file path to our string filepath
-			strcpy(filepath, argv[0]);
+        // create a new set of arguments to parse in execv
+        char *new_argv[] = {filepath, socket_str, NULL};
 
-			//strcpy(filepath, fname);
+        execvp(argv[0], new_argv);
 
-			// create a new set of arguments to parse in execv
-			char *new_argv[] = {filepath, socket_str, NULL};
+        printf("Initial uid = %d\n", getuid());
 
+        //nobody user
+        tempuid = setuid(65534);
+        printf("tempuid = %d\n" "uid = %d\n", tempuid, getuid());
+    }
 
-			execvp(argv[0], new_argv);
-						
-				//execv(fname, new_argv);
-			
+    // parent process
+    else if ((childpid = fork()) > 0)
+    {
 
-			printf("Initial uid = %d\n", getuid());
-			
-			//nobody user
-			tempuid = setuid(65534);
-			printf("tempuid = %d\n" "uid = %d\n", tempuid, getuid());
+        sleep(5);
+        printf("\n Parent process addr: %p", ptr);
+        printf("\n parentpid = %d\n", childpid);
+    }
 
-	//read from client into buffer, max of 1024 bytes --> bigger than size of buffer (102)
-			//no need to change it
-			valread = read( new_socket , buffer, 1024);
-			printf("%s\n",buffer );
+    // failed to fork
+    else 
+    {
 
-			//send = write 
-			send(new_socket , hello , strlen(hello) , 0 );
-
-			//send message 
-			printf("Hello message sent\n");
-
-			close(server_fd);
-
-		}
-	
-		else if ((childpid = fork()) > 0)
-		{
-			sleep(5);
-			printf("\n Parent process addr: %p", ptr);
-			printf("\n parentpid = %d\n", childpid);
-		}
-
-		else 
-		{
-			perror("fork failed");
-			exit(EXIT_FAILURE);
-		}
+        perror("fork failed");
+        exit(EXIT_FAILURE);
+    }
 
     return 0;
 }
