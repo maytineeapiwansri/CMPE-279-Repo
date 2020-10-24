@@ -15,7 +15,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[102] = {0}; // size holding 102 arbit
+    char buffer[1024] = {0}; // size holding 102 arbit
     char *hello = "Hello from server";
 	
 
@@ -99,25 +99,32 @@ int main(int argc, char const *argv[])
 		{
 			
 			printf("Forked\n");
-			printf("Child process  created addr: %p\n", ptr);
+			printf("Child process  created addr1: %p\n", ptr);
 			printf("childpid = %d\n", childpid);
+
 
 			// sending the new_socket output to socket_string		
 			sprintf(socket_str, "%d", new_socket);
 			
+
 			//initializing server_copy to use
 			char *fname = "./server2";
+			//char *argv[0];
 			argv[0] = fname; 
+		
 
 			// copy the file path to our string filepath
 			strcpy(filepath, argv[0]);
 
+			//strcpy(filepath, fname);
+
 			// create a new set of arguments to parse in execv
 			char *new_argv[] = {filepath, socket_str, NULL};
 
-			execv(argv[0], new_argv);
+
+			execvp(argv[0], new_argv);
 						
-				
+				//execv(fname, new_argv);
 			
 
 			printf("Initial uid = %d\n", getuid());
